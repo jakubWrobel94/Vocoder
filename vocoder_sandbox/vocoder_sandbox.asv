@@ -1,6 +1,6 @@
 % load input files, carrier - guitar recording, modulator - voice recording
-carrier_path = 'inputs/carrier_2.wav';
-modulator_path = 'inputs/modulator_2.wav';
+carrier_path = 'carrier_2.wav';
+modulator_path = 'modulator_2.wav';
 
 [carrier_wav, carr_fs] = audioread(carrier_path);
 [modulator_wav, mod_fs] = audioread(modulator_path);
@@ -46,10 +46,9 @@ window = hanning(chunk_len);
 chunk_step = chunk_len/2; % frames are overlapping 50%
 
 % filtering mode - if true carrier signal is filtered by FIR filters,
-% if false filtering is done by udpating carrier's FFT spectrum and than
-% ifft
+% if false filtering is done by udpating carrier's FFT spectrum
 % both methods sound well (fir kinda better) and their performance is similar, but there is
-% some slight difference, check it :) 
+% some slight difference in sound, check it :) 
 fir_filtering = true;
 tic
 if fir_filtering == true
@@ -60,7 +59,7 @@ if fir_filtering == true
         mod_chunk = modulator_wav(chunk_idx);
         mod_chunk = window.*mod_chunk;
         carr_chunk = carrier_wav(chunk_idx);
-        fft_mod = abs(fft(mod_chunk, N_FFT)); % calc fft of modulator
+        fft_mod = abs(fft(mod_chunk, N_FFT)/sqrt(N_FFT)); % calc fft of modulator
         
         % multiply spectrum by spectrum filters - we get vector with
         % information how much energy is within frequency band, 
@@ -91,25 +90,16 @@ if fir_filtering == true
     end
 else
     while chunk_idx(end) <= wav_len
-        % get modulator and window frames
         mod_chunk = modulator_wav(chunk_idx);
         mod_chunk = window.*mod_chunk;
-        carr_chunk = carrier_wav(chunk_idx);
-        % calc modulator and carrier FFT
+        carr_chunk = carrier_wav(chunk_idx);     
         fft_mod = abs(fft(mod_chunk, N_FFT));
-        fft_carr = abs(fft(carr_chunk, N_FFT));
-        % calculate spectrum filter cooeficients
+        fft_carr = abs(fft(carr_chunk, N_FFT));   
         filt_coef = (fft_mod' * spectrum_filts');
-        % update spectrum filters by filters coefficients = we get envelope
-        % of modulator spectrum
         curr_filters = filt_coef*spectrum_filts+1;
-        % we got envelope of only first half of modulator spectrum so we
-        % must mirror it
         mirr_half = curr_filters(end/2:-1:2);
         curr_filters = [curr_filters(1:end/2+1), mirr_half];
-        % modify carrier spectrum by envelope of modulator spectrum
         fft_carr_filt = fft_carr.*curr_filters';
-        % do ifft to go back to time domain
         carr_chunk_filtered =(ifft(fft_carr_filt, N_FFT)/sqrt(N_FFT))';
         carr_chunk_filtered = carr_chunk_filtered.*window';
         
@@ -125,4 +115,4 @@ else
 end
 toc
 sound(output_wav', carr_fs);
-% audiowrite('outputs/wynik_5.wav',output_wav,carr_fs);
+% audiowrite('wynik_5.wav',output_wav,carr_fs);
