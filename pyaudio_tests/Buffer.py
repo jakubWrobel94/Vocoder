@@ -2,13 +2,8 @@ import numpy as np
 from scipy import signal
 import cProfile, pstats, io
 
+
 class Buffer:
-
-    _old_chunk = []
-    _new_chunk = []
-    _empty_chunk = []
-    _chunk_size = 0
-
     def __init__(self, chunk_size):
         self._new_chunk = np.zeros((chunk_size, ))
         self._old_chunk = np.zeros((chunk_size, ))

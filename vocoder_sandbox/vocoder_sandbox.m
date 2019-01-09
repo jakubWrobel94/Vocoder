@@ -126,7 +126,7 @@ else
 end
 toc
 tic
-y = chanvocoder(carrier_wav, modulator_wav, N_FFT, N_FILT, 1/2);
+% y = chanvocoder(carrier_wav, modulator_wav, N_FFT, N_FILT, 1/2);
 toc
 sound(output_wav', carr_fs);
 %audiowrite('outputs/output.wav',output_wav,carr_fs);

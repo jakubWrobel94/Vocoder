@@ -6,6 +6,7 @@ filt_freqs = 700*(exp(m_vals/1125) - 1);
 f_vector = linspace(0, fs, n_fft);
 filter_idx = 1;
 mel_filters = zeros(length(filt_freqs)-2, n_fft);
+
 for n = 2:length(filt_freqs)-1
     curr_idxs_pre = filt_freqs(n-1) <=  f_vector & f_vector <= filt_freqs(n);
     curr_idxs_post = filt_freqs(n) <=  f_vector & f_vector <= filt_freqs(n+1);
@@ -18,4 +19,3 @@ end
 filt_freqs(end) = [];
 filt_freqs(1) = [];
 end
-

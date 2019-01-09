@@ -6,9 +6,9 @@ from numpy import mean, sqrt, square, arange
 import matplotlib.pyplot as plt
 from audiolazy import lazy_lpc
 import wave
+from Vocoder import LiveStream, FileStream, OutputStream, Settings, Vocoder
 
-
-@Buffer.profile
+# @Buffer.profile
 def play():
     p = pyaudio.PyAudio()
     for i in range(p.get_device_count()):
@@ -74,11 +74,15 @@ def play():
 
         fft_mod_envelope = signal.lfilter(filt_window, [1], fft_mod)
         plt.plot(fft_mod_envelope)
-        for filt_idx in range(0, len(filt_coefs)):
-            filtered = np.multiply(fft_mod, spectr_filters[(filt_idx, slice(None))])
-            filt_coef = np.sum(filtered)
-            filt_coefs[(filt_idx, slice(None))] = spectr_filters[(filt_idx, slice(None))] * filt_coef
+        # for filt_idx in range(0, len(filt_coefs)):
+        #     filtered = np.multiply(fft_mod, spectr_filters[(filt_idx, slice(None))])
+        #     filt_coef = np.sum(filtered)
+        #     filt_coefs[(filt_idx, slice(None))] = spectr_filters[(filt_idx, slice(None))] * filt_coef
 
+        n_rows = np.shape(spectr_filters)[0]
+        filt_coefs = spectr_filters * np.sum(
+            spectr_filters * fft_mod, 1).reshape((n_rows, -1))
+        
         curr_coefs = np.sum(filt_coefs, axis=0)
         half = curr_coefs[0:int(N_FFT/2+1)]
         mirrored_half = np.flip(half[1:int(len(half)-1)])
@@ -87,7 +91,7 @@ def play():
         output_signal = np.real(np.fft.ifft(fft_carr*fft_coefs))
         output_signal = np.real(np.fft.ifft(fft_carr * fft_mod_envelope))
         out_rms = sqrt(mean(square(output_signal)))
-        gain_factor = mod_rms / out_rms
+        gain_factor = mod_rms / out_rms  # >????????
         output_signal_windowed = np.float32(np.multiply(output_signal, window) * gain_factor)
         out_buffer.add_to_whole_buffer(output_signal_windowed)
         out = out_buffer.get_old_chunk()
@@ -103,5 +107,35 @@ def play():
     p.terminate()
 
 
-play()
+# play()
+carrier_path = 'wavs/carrier_2.wav'
+modulator_path = 'wavs/modulator_2.wav'
 
+CHUNK = 512
+# FORMAT = p.get_format_from_width(carr_wave.getsampwidth())
+
+N_FFT = 2 * CHUNK
+N_FILT = 128
+FILT_LOW = 100
+FILT_UP = 10000
+PRE_EMP_COEFF = 0.97
+
+settings = Settings(CHUNK = CHUNK,
+                    N_FFT = N_FFT,
+                    N_FILT = N_FILT,
+                    FILT_LOW = FILT_LOW,
+                    FILT_UP = FILT_UP,
+                    PRE_EMP_COEFF = PRE_EMP_COEFF)
+
+input_stream = FileStream(carrier_path, modulator_path, CHUNK)
+output_stream = OutputStream(channels=input_stream.CHANNELS,
+                             rate=input_stream.SAMPLE_RATE,
+                             frames_per_buffer=CHUNK,
+                             input_device_index=5)
+
+vocoder = Vocoder(settings=settings,
+                  input_stream=input_stream,
+                  output_stream=output_stream)
+
+for _ in range(200):
+    vocoder.process()

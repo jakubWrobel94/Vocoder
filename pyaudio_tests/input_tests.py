@@ -58,7 +58,7 @@ for i in range(0, 2000):
     carr_signal = carr_buffer.get_whole_buffer()
     mod_signal = mod_buffer.get_whole_buffer()
 
-    mod_rms = sqrt(mean(square(mod_signal)))
+    mod_rms = sqrt(mean(square(mod_signal)))  # why?
     mod_signal = np.multiply(mod_signal, window)
     mod_signal = signal.lfilter([-PRE_EMP_COEF, 1], 1, mod_signal)
 
@@ -78,7 +78,7 @@ for i in range(0, 2000):
 
     output_signal = np.real(np.fft.ifft(fft_carr * fft_coefs))
     out_rms = sqrt(mean(square(output_signal)))
-    gain_factor = carr_rms / out_rms
+    gain_factor = carr_rms / out_rms  # ????
     output_signal_windowed = np.float32(np.multiply(output_signal, window) * gain_factor)
     out_buffer.add_to_whole_buffer(output_signal_windowed)
 
