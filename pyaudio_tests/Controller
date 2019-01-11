@@ -1,0 +1,11 @@
+import Vocoder
+from Vocoder_view import VocoderGUI
+
+class Controller:
+
+    def __init__(self):
+        # self.vocoder =       Vocoder object
+        self.vocoder_gui = VocoderGUI()    #Vocoder_GUI object
+
+    def runVocoder(self):
+        self.vocoder_gui.runVocoder()
