@@ -1,0 +1,29 @@
+from tkinter import *
+
+class VocoderGUI:
+    def __init__(self,master):
+
+         topFrame = Frame(root)
+         topFrame.pack()
+         bottomFrame = Frame(root)
+         bottomFrame.pack(side=BOTTOM)
+
+
+
+         self.startButton = Button(topFrame, text = "START", command=self.runVocoder)
+         self.startButton.pack(side=LEFT)
+
+         self.stopButton = Button(topFrame, text= "STOP", command = self.stopVocoder)
+         self.stopButton.pack(side=LEFT)
+
+
+    def runVocoder(self):
+        print("this function runs the Vocoder")
+
+    def stopVocoder(self):
+        print("this function will hold an exeption that stop Vocoder ")
+
+root = Tk()
+
+gui = VocoderGUI(root)
+root.mainloop()
