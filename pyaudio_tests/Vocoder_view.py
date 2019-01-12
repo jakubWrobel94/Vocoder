@@ -53,7 +53,6 @@ class VocoderGUI:
 
     def stopVocoder(self):
         self.processing = False
-        # self.controller.stopVocoder()
 
     def chooseInput1(self):
         print("wybieram input1")
