@@ -1,10 +1,12 @@
+from tkinter import filedialog
 from tkinter import *
 from tkinter.ttk import *
-from Controller import Controller
+
+from Controller import Controller, MODE
+import threading
 
 class VocoderGUI:
     def __init__(self,master):
-
         topFrame = Frame(master)
         topFrame.pack()
         bottomFrame = Frame(master)
@@ -20,13 +22,14 @@ class VocoderGUI:
         self.stopButton = Button(topFrame, text= "STOP", command = self.stopVocoder)
         self.stopButton.grid(column=5, row=1)
 
-
+        #  BUTTON TO CHOOSE FILE
+        #  then -> self.filename = filedialog.askopenfilename(initialdir = "/",title = "Select file")
 
         #MIC INPUT menu
         Label(topFrame, text="MIC INPUT").grid(column=1, row=0)
         self.string = StringVar()
         self.stringChosen = Combobox(topFrame, width=12, textvariable=self.string)
-        self.stringChosen['values'] = ("LINE1","LINE2")  
+        self.stringChosen['values'] = ("LINE1", "LINE2")  
         self.stringChosen.grid(column=1, row=1)
         self.stringChosen.current(0)
 
@@ -38,10 +41,14 @@ class VocoderGUI:
         self.stringChosen.grid(column=1, row=3)
         self.stringChosen.current(1)
 
-
-
     def runVocoder(self):
+        self.controller.set_vocoder_mode(mode=MODE.file,
+                                         mod_path='wavs/modulator_2.wav',
+                                         carr_path='wavs/carrier_2.wav')
 
+        # self.t1 = threading.Thread(target=self.controller.runVocoder)
+        # self.t1.start()
+        # self.t1.join()
         self.controller.runVocoder()
 
     def stopVocoder(self):

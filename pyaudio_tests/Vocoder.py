@@ -83,22 +83,18 @@ class Settings:
 
 
 class Vocoder:
-    def __init__(self, settings, input_stream, output_stream):
+    def __init__(self, settings, input_stream=None, output_stream=None):
         self.settings = settings
         self.input_stream = input_stream
         self.output_stream = output_stream
         self.carr_buffer = Buffer.Buffer(self.settings.CHUNK)
         self.mod_buffer = Buffer.Buffer(self.settings.CHUNK)
         self.output_buffer = Buffer.Buffer(self.settings.CHUNK)
-        self.initialize()
 
     def initialize(self):
         self.window = signal.windows.hann(2*self.settings.CHUNK)
         self.spectr_filters, self.filt_freqs = self.get_spectrum_filters()
         self.filt_coefs = np.zeros((self.settings.N_FILT, self.settings.N_FFT))
-
-    def read_frames():
-        pass
 
     def get_updated_buffer(self):
         carr_frame, mod_frame, carr_rms = self.input_stream.update_stream()
@@ -113,6 +109,9 @@ class Vocoder:
 
 
     def process(self):
+        if not (self.input_stream and self.output_stream):
+            raise Exception("You have to provide Input and Output Stream")
+
         carr_signal, mod_signal, carr_rms = self.get_updated_buffer()
 
         mod_rms = sqrt(mean(square(mod_signal)))
