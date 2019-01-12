@@ -55,9 +55,8 @@ class Controller:
         self._vocoder.initialize()
 
     def runVocoder(self):
-        print("this works in controller class, and runs the Vocoder")
-        for _ in range(200):
-            self._vocoder.process()
+        # print("this works in controller class, and runs the Vocoder")
+        self._vocoder.process()
 
     def stopVocoder(self):
         print ("this works in controller class, and stops the Vocoder")

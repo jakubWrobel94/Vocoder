@@ -12,6 +12,7 @@ class VocoderGUI:
         bottomFrame = Frame(master)
         bottomFrame.pack(side=BOTTOM)
 
+        self.processing = False
         self.controller = Controller()
 
 
@@ -42,20 +43,25 @@ class VocoderGUI:
         self.stringChosen.current(1)
 
     def runVocoder(self):
-        self.controller.set_vocoder_mode(mode=MODE.file,
-                                         mod_path='wavs/modulator_2.wav',
-                                         carr_path='wavs/carrier_2.wav')
+        if not self.processing:
+            self.controller.set_vocoder_mode(mode=MODE.file,
+                                             mod_path='wavs/modulator_2.wav',
+                                             carr_path='wavs/carrier_2.wav')
 
-        # self.t1 = threading.Thread(target=self.controller.runVocoder)
-        # self.t1.start()
-        # self.t1.join()
-        self.controller.runVocoder()
+            self.t1 = threading.Thread(target=self.process)
+            self.t1.start()
 
     def stopVocoder(self):
-        self.controller.stopVocoder()
+        self.processing = False
+        # self.controller.stopVocoder()
 
     def chooseInput1(self):
         print("wybieram input1")
+
+    def process(self):
+        self.processing = True
+        while self.processing:
+            self.controller.runVocoder()
 
 
 
