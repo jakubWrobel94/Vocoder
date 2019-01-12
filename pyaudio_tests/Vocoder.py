@@ -3,8 +3,7 @@ import numpy as np
 import Buffer
 from scipy import signal
 from numpy import mean, sqrt, square, arange
-import matplotlib.pyplot as plt
-from audiolazy import lazy_lpc
+from scipy.linalg import solve_toeplitz
 import wave
 
 
@@ -27,7 +26,6 @@ class LiveStream(Stream):
                                   input=True,
                                   frames_per_buffer=frames_per_buffer,
                                   input_device_index=input_device_index)
-
 
     def update_stream(self):
         data = self.stream.read(self.CHUNK)
@@ -73,13 +71,24 @@ class OutputStream(Stream):
 
 
 class Settings:
-    def __init__(self, CHUNK, N_FFT, N_FILT, FILT_LOW, FILT_UP, PRE_EMP_COEFF):
+    def __init__(self, CHUNK, PRE_EMP_COEFF):
         self.CHUNK = CHUNK
-        self.N_FFT = N_FFT
+        self.PRE_EMP_COEFF = PRE_EMP_COEFF
+
+
+class SettingsLPC(Settings):
+    def __init__(self, CHUNK, PRE_EMP_COEFF, N_TAPS):
+        super(SettingsLPC, self).__init__(CHUNK, PRE_EMP_COEFF)
+        self.N_TAPS = N_TAPS
+
+
+class SettingsFFT(Settings):
+    def __init__(self, CHUNK, PRE_EMP_COEFF, N_FILT, FILT_LOW, FILT_UP):
+        super(SettingsFFT, self).__init__(CHUNK, PRE_EMP_COEFF)
+        self.N_FFT = 2*CHUNK
         self.N_FILT = N_FILT
         self.FILT_LOW = FILT_LOW
         self.FILT_UP = FILT_UP
-        self.PRE_EMP_COEFF = PRE_EMP_COEFF
 
 
 class Vocoder:
@@ -90,11 +99,6 @@ class Vocoder:
         self.carr_buffer = Buffer.Buffer(self.settings.CHUNK)
         self.mod_buffer = Buffer.Buffer(self.settings.CHUNK)
         self.output_buffer = Buffer.Buffer(self.settings.CHUNK)
-
-    def initialize(self):
-        self.window = signal.windows.hann(2*self.settings.CHUNK)
-        self.spectr_filters, self.filt_freqs = self.get_spectrum_filters()
-        self.filt_coefs = np.zeros((self.settings.N_FILT, self.settings.N_FFT))
 
     def get_updated_buffer(self):
         carr_frame, mod_frame, carr_rms = self.input_stream.update_stream()
@@ -107,6 +111,71 @@ class Vocoder:
 
         return carr_signal, mod_signal, carr_rms
 
+
+class VocoderLPC(Vocoder):
+    def __init__(self, settings, input_stream=None, output_stream=None):
+        super(VocoderLPC, self).__init__(settings, input_stream, output_stream)
+
+    def initialize(self):
+        self.window = signal.windows.hann(2*self.settings.CHUNK)
+
+    def calc_lpc(self, frame):
+        n = self.settings.N_TAPS
+        fft_frame = np.fft.fft(frame)
+        acorr = np.real(np.fft.ifft(fft_frame * np.conj(fft_frame)))
+        b = acorr[1:n]
+        p = solve_toeplitz((acorr[0:n - 1], acorr[0:n - 1]), b)
+        p0 = np.array([1])
+        P = np.concatenate((p0, -1 * p))
+        return P
+
+    def process(self):
+        if not (self.input_stream and self.output_stream):
+            raise Exception("You have to provide Input and Output Stream")
+
+        carr_signal, mod_signal, carr_rms = self.get_updated_buffer()
+
+        mod_rms = sqrt(mean(square(mod_signal)))
+        mod_signal = np.multiply(mod_signal, self.window)
+        mod_signal = signal.lfilter([-self.settings.PRE_EMP_COEFF, 1], 1, mod_signal)
+
+        lpc_coefs = self.calc_lpc(mod_signal)
+        output_signal = signal.lfilter([1], lpc_coefs, carr_signal)
+        out_rms = sqrt(mean(square(output_signal)))
+        gain_factor = carr_rms / out_rms if  carr_rms else mod_rms / out_rms
+        output_signal_windowed = np.float32(np.multiply(output_signal, self.window) * gain_factor)
+        self.output_buffer.add_to_whole_buffer(output_signal_windowed)
+
+        out = self.output_buffer.get_old_chunk()
+        out_f32 = out.astype(np.float32)
+        self.output_stream.stream.write(out_f32.tobytes())
+
+        self.carr_buffer.move_chunks()
+        self.mod_buffer.move_chunks()
+        self.output_buffer.move_chunks()
+
+
+class VocoderFFT(Vocoder):
+    def __init__(self, settings, input_stream=None, output_stream=None):
+        super(VocoderFFT, self).__init__(settings, input_stream, output_stream)
+
+    def initialize(self):
+        self.window = signal.windows.hann(2*self.settings.CHUNK)
+        self.spectr_filters, self.filt_freqs = self.get_spectrum_filters()
+        self.filt_coefs = np.zeros((self.settings.N_FILT, self.settings.N_FFT))
+
+    def get_spectrum_filters(self):
+        filt_freqs = np.linspace(self.settings.FILT_LOW, 
+                                 self.settings.FILT_UP,
+                                 self.settings.N_FILT + 1)
+        f_vector = np.linspace(0, 
+            self.input_stream.SAMPLE_RATE, 
+            self.settings.N_FFT)
+        spectr_filters = np.zeros((self.settings.N_FILT, self.settings.N_FFT))
+        for n in range(0, len(filt_freqs) - 1):
+            filt_idxs = (filt_freqs[n] < f_vector) & (f_vector < filt_freqs[n + 1])
+            spectr_filters[(n, filt_idxs)] = 1
+        return spectr_filters, filt_freqs
 
     def process(self):
         if not (self.input_stream and self.output_stream):
@@ -143,18 +212,3 @@ class Vocoder:
         self.carr_buffer.move_chunks()
         self.mod_buffer.move_chunks()
         self.output_buffer.move_chunks()
-
-
-    def get_spectrum_filters(self):
-        filt_freqs = np.linspace(self.settings.FILT_LOW, 
-                                 self.settings.FILT_UP,
-                                 self.settings.N_FILT + 1)
-        f_vector = np.linspace(0, 
-            self.input_stream.SAMPLE_RATE, 
-            self.settings.N_FFT)
-        spectr_filters = np.zeros((self.settings.N_FILT, self.settings.N_FFT))
-        for n in range(0, len(filt_freqs) - 1):
-            filt_idxs = (filt_freqs[n] < f_vector) & (f_vector < filt_freqs[n + 1])
-            spectr_filters[(n, filt_idxs)] = 1
-        return spectr_filters, filt_freqs
-
