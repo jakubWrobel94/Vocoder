@@ -1,11 +1,15 @@
-import Vocoder
-from Vocoder_view import VocoderGUI
+from Vocoder import *
+from tkinter import *
+
 
 class Controller:
 
     def __init__(self):
-        # self.vocoder =       Vocoder object
-        self.vocoder_gui = VocoderGUI()    #Vocoder_GUI object
+        self.stream = Stream() #  Vocoder object (Musi zawierać proste metody startVocoder, stopVocoder....)
+        #self.vocoder_gui = VocoderGUI(master)    #Vocoder_GUI object
 
     def runVocoder(self):
-        self.vocoder_gui.runVocoder()
+        print("this works in controller class, and runs the Vocoder")
+
+    def stopVocoder(self):
+        print ("this works in controller class, and stops the Vocoder")
