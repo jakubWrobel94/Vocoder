@@ -1,4 +1,4 @@
-from Vocoder import Vocoder, Settings, FileStream, LiveStream, OutputStream
+from Vocoder import VocoderLPC, VocoderFFT, SettingsLPC, SettingsFFT, FileStream, LiveStream, OutputStream
 from collections import namedtuple
 
 import pyaudio
@@ -11,19 +11,15 @@ N_FILT = 128
 FILT_LOW = 100
 FILT_UP = 10000
 PRE_EMP_COEFF = 0.97
-
+N_TAPS = 80
 
 class Controller:
     def __init__(self):
-        self._settings = Settings(
-                CHUNK = CHUNK,
-                N_FFT = N_FFT,
-                N_FILT = N_FILT,
-                FILT_LOW = FILT_LOW,
-                FILT_UP = FILT_UP,
-                PRE_EMP_COEFF = PRE_EMP_COEFF)
+        self._settings = SettingsLPC(CHUNK = CHUNK,
+                    N_TAPS = N_TAPS,
+                    PRE_EMP_COEFF = PRE_EMP_COEFF)
 
-        self._vocoder = Vocoder(settings=self._settings)
+        self._vocoder = VocoderLPC(settings=self._settings)
 
     def set_vocoder_mode(self, mode, *args, **kwargs):
         if mode is MODE.live:
