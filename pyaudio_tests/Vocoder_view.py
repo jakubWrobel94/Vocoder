@@ -43,7 +43,9 @@ class VocoderGUI:
         self.choose_fileButton = Button(topFrame, text="CHOOSE FILE", command=self.chooseFilename)
         self.choose_fileButton.grid(column=3, row=1)
 
-
+        #BUTTON TO CHECK HOW CHECK DEVICE'S INDEX
+        self.choose_fileButton = Button(topFrame, text=" DEVICE'S INDEX", command=self.controller.get_devices)
+        self.choose_fileButton.grid(column=1, row=4)
 
     def runVocoder(self):
         if not self.processing:
