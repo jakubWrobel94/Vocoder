@@ -21,10 +21,7 @@ class VocoderGUI:
 
 
         self.stopButton = Button(topFrame, text= "STOP", command = self.stopVocoder)
-        self.stopButton.grid(column=5, row=1)
-
-        #  BUTTON TO CHOOSE FILE
-        #  then -> self.filename = filedialog.askopenfilename(initialdir = "/",title = "Select file")
+        self.stopButton.grid(column=4, row=2)
 
         #MIC INPUT menu
         Label(topFrame, text="MIC INPUT").grid(column=1, row=0)
@@ -41,6 +38,12 @@ class VocoderGUI:
         self.stringChosen['values'] = ("LINE1", "LINE2","PIŁA", "PROSTOKAT")
         self.stringChosen.grid(column=1, row=3)
         self.stringChosen.current(1)
+
+        #  BUTTON TO CHOOSE FILE
+        self.choose_fileButton = Button(topFrame, text="CHOOSE FILE", command=self.chooseFilename)
+        self.choose_fileButton.grid(column=3, row=1)
+
+
 
     def runVocoder(self):
         if not self.processing:
@@ -61,6 +64,9 @@ class VocoderGUI:
         self.processing = True
         while self.processing:
             self.controller.runVocoder()
+
+    def chooseFilename(self):
+        filedialog.askopenfilename(initialdir="/", title="Select file")
 
 
 
