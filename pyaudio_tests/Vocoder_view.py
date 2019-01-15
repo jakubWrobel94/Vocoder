@@ -21,10 +21,7 @@ class VocoderGUI:
 
 
         self.stopButton = Button(topFrame, text= "STOP", command = self.stopVocoder)
-        self.stopButton.grid(column=5, row=1)
-
-        #  BUTTON TO CHOOSE FILE
-        #  then -> self.filename = filedialog.askopenfilename(initialdir = "/",title = "Select file")
+        self.stopButton.grid(column=4, row=2)
 
         #MIC INPUT menu
         Label(topFrame, text="MIC INPUT").grid(column=1, row=0)
@@ -42,11 +39,29 @@ class VocoderGUI:
         self.stringChosen.grid(column=1, row=3)
         self.stringChosen.current(1)
 
+        #  BUTTON TO CHOOSE FILE
+        self.choose_fileButton = Button(topFrame, text="CHOOSE FILE", command=self.chooseFilename)
+        self.choose_fileButton.grid(column=3, row=1)
+
+        #BUTTON TO CHECK HOW CHECK DEVICE'S INDEX
+        self.choose_fileButton = Button(topFrame, text=" DEVICE'S INDEX", command=self.controller.get_devices)
+        self.choose_fileButton.grid(column=1, row=4)
+
+        # LPC/FFT BUTTON
+        Label(topFrame, text="LPC/FFT").grid(column=1, row=5)
+        self.string = StringVar()
+        self.stringChosen = Combobox(topFrame, width=12, textvariable=self.string)
+        self.stringChosen['values'] = ("LPC", "FFT")
+        self.stringChosen.bind("<Down>", self.callbackFunctiontToLPCFFT())
+       # self.stringChosen.bind('<Button-2>', self.setFFT())
+        self.stringChosen.grid(column=1, row=6)
+        #self.stringChosen.current(1)
+
     def runVocoder(self):
         if not self.processing:
             self.controller.set_vocoder_mode(mode=MODE.file,
                                              mod_path='wavs/modulator_2.wav',
-                                             carr_path='wavs/carrier_2.wav')
+                                             carr_path='wavs/carrier_2.wav')   # trzeba stworzyć metodę do automatycznego dodawania tych ścieżek do plików
 
             self.t1 = threading.Thread(target=self.process)
             self.t1.start()
@@ -61,6 +76,20 @@ class VocoderGUI:
         self.processing = True
         while self.processing:
             self.controller.runVocoder()
+
+    def chooseFilename(self):
+        filedialog.askopenfilename(initialdir="/", title="Select file")
+
+    def callbackFunctiontToLPCFFT(event):
+        print(event)
+        if event == 0:
+            print("Setting LPC")
+        elif event == 1:
+            print("Setting FFT")
+        else:
+            print("None"
+                  "")
+
 
 
 
