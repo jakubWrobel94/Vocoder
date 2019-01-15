@@ -29,7 +29,7 @@ class Controller:
                         for idx in range(p.get_device_count())]
 
     def runVocoder(self):
-    """Function to run vocoder - simply to execute the process function"""
+        """Function to run vocoder - simply to execute the process function"""
         self._vocoder.process()
 
     def set_vocoder_mode(self, mode, **kwargs):
