@@ -49,13 +49,8 @@ class VocoderGUI:
 
         # LPC/FFT BUTTON
         Label(topFrame, text="LPC/FFT").grid(column=1, row=5)
-        self.string = StringVar()
-        self.stringChosen = Combobox(topFrame, width=12, textvariable=self.string)
-        self.stringChosen['values'] = ("LPC", "FFT")
-        self.stringChosen.bind("<Down>", self.callbackFunctiontToLPCFFT())
-       # self.stringChosen.bind('<Button-2>', self.setFFT())
-        self.stringChosen.grid(column=1, row=6)
-        #self.stringChosen.current(1)
+        self.t_btn = Button(topFrame, text="FFT", command=self.toggle)
+        self.t_btn.grid(column =1, row =6)
 
     def runVocoder(self):
         if not self.processing:
@@ -90,6 +85,19 @@ class VocoderGUI:
             print("None"
                   "")
 
+
+    def toggle(self):
+        '''
+        use
+        t_btn.config('text')[-1]
+        to get the present state of the toggle button
+        '''
+        if self.t_btn.config('text')[-1] == 'FFT':
+            self.t_btn.config(text='LPC')
+            print("pressed FFT")
+        else:
+            self.t_btn.config(text='FFT')
+            print("pressed LPC")
 
 
 
