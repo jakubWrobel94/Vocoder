@@ -75,16 +75,6 @@ class VocoderGUI:
     def chooseFilename(self):
         filedialog.askopenfilename(initialdir="/", title="Select file")
 
-    def callbackFunctiontToLPCFFT(event):
-        print(event)
-        if event == 0:
-            print("Setting LPC")
-        elif event == 1:
-            print("Setting FFT")
-        else:
-            print("None"
-                  "")
-
 
     def toggle(self):
         '''
