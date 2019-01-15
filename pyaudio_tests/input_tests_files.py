@@ -43,5 +43,9 @@ else:
                   output_stream=output_stream)
 vocoder.initialize()
 
-for _ in range(200):
-    vocoder.process()
+processing = True
+while processing == True:
+    try:
+        vocoder.process()
+    except Exception:
+        processing = False
