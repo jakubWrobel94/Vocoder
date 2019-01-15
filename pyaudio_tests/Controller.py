@@ -97,9 +97,12 @@ class Controller:
         values are their names.
         """
         p = pyaudio.PyAudio()
-        devices = {idx: p.get_device_info_by_index(idx)['name'] 
-            for idx in range(p.get_device_count())}
-        print(devices)
+        devices = {p.get_device_info_by_index(idx)['name']: idx
+                   for idx in range(p.get_device_count())}
+        return devices
 
+    @staticmethod
+    def get_index_of_device(index):
+        pass
 
 

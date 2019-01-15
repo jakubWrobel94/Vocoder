@@ -14,6 +14,7 @@ class VocoderGUI:
 
         self.processing = False
         self.controller = Controller()
+        self.devices = self.controller.get_devices()
 
 
         self.startButton = ttk.Button(topFrame, text = "START", command=self.runVocoder)
@@ -27,7 +28,7 @@ class VocoderGUI:
         ttk.Label(topFrame, text="MIC INPUT").grid(column=1, row=0)
         self.micString = tk.StringVar()
         self.micChosen = ttk.Combobox(topFrame, width=12, textvariable=self.micString)
-        self.micChosen['values'] = ("LINE1", "LINE2")
+        self.micChosen['values'] = list(self.devices.keys())
         self.micChosen.grid(column=1, row=1)
         self.micChosen.current(0)
 
@@ -66,8 +67,9 @@ class VocoderGUI:
 
             self.t1 = threading.Thread(target=self.process)
             self.t1.start()
-            print("Chosen input mic : " + str(self.micString))
-            print("Choosen input signal: " + str(self.signalString))
+            #print("Chosen input mic : " + str(self.micString))
+            #print("Choosen input signal: " + str(self.signalString))
+            self.returnMicInput()
 
 
     def stopVocoder(self):
@@ -91,6 +93,10 @@ class VocoderGUI:
         self.modFile = filedialog.askopenfilename(initialdir="./wavs", title="Select Mod file")
         print("choosen mod: " + str(self.modFile))
         #return self.modFile
+
+    def returnMicInput(self):
+        print("chosen mic input: " + str(self.devices[self.micString.get()]))
+
 
     def toggle(self):
         '''
