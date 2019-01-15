@@ -82,6 +82,14 @@ class Controller:
     def stopVocoder(self):
         pass
 
+    def setFFT(self):
+        print("setted FFT in Controller class")
+
+
+    def setLPC(self):
+        print("setted LPC in Controller class")
+
+
     @staticmethod
     def get_devices():
         """
@@ -92,5 +100,6 @@ class Controller:
         devices = {idx: p.get_device_info_by_index(idx)['name'] 
             for idx in range(p.get_device_count())}
         print(devices)
+
 
 
