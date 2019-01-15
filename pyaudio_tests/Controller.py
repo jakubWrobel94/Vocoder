@@ -61,8 +61,8 @@ class Controller:
                 and 'mod_path' in kwargs)
             self._vocoder_mode = mode
             self._input_stream = FileStream(
-                    carr_file_path=kwargs['carr_path'],
                     mod_file_path=kwargs['mod_path'],
+                    carr_file_path=kwargs['carr_path'],
                     chunk=CHUNK)
 
         self._output_stream = OutputStream(

@@ -61,8 +61,8 @@ class VocoderGUI:
     def runVocoder(self):
         if not self.processing:
             self.controller.set_vocoder_mode(mode=MODE.file,
-                                             mod_path=self.carrFile,
-                                             carr_path=self.modFile)
+                                             mod_path=str(self.modFile),
+                                             carr_path=str(self.carrFile))
 
             self.t1 = threading.Thread(target=self.process)
             self.t1.start()
