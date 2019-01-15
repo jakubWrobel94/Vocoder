@@ -8,13 +8,15 @@ import wave
 
 
 class Stream:
+    """ Stream class that will be holding PyAudio Streams - both input and output """
     def __init__(self):
         self.p = pyaudio.PyAudio()
 
 
 class LiveStream(Stream):
-    def __init__(self, channels, rate, frames_per_buffer, 
-            input_device_index, chunk, carr_idx, mod_idx):
+    """ Class which holds the Stream from interface device """
+    def __init__(self, frames_per_buffer, input_device_index, chunk, 
+            carr_idx, mod_idx, channels=2, rate=44100):
         super(LiveStream, self).__init__()
         self.carr_idx = carr_idx
         self.mod_idx = mod_idx
@@ -39,6 +41,7 @@ class LiveStream(Stream):
 
 
 class FileStream(Stream):
+    """ Class which operates on file and stream it """
     def __init__(self, carr_file_path, mod_file_path, chunk):
         super(FileStream, self).__init__()
         self.carr_wave = wave.open(carr_file_path, 'rb')
@@ -59,6 +62,8 @@ class FileStream(Stream):
 
 
 class OutputStream(Stream):
+    """ Class which holds the output stream - updating stream variable enables
+    us to hear it on the speakers """ 
     def __init__(self, channels, rate, frames_per_buffer, 
             input_device_index):
         super(OutputStream, self).__init__()
