@@ -1,5 +1,5 @@
 % load input files, carrier - guitar recording, modulator - voice recording
-carrier_path = 'inputs/carrier_3.wav';
+carrier_path = 'inputs/carrier_2.wav';
 modulator_path = 'inputs/modulator_2.wav';
 
 [carrier_wav, carr_fs] = audioread(carrier_path);
@@ -20,9 +20,9 @@ modulator_wav = modulator_wav(1:wav_len);
 % FILT_LOW - f of first filter
 % FILT_UP - f of last filter
 % FILT_ORD - FIR filter order
-N_FFT = 2048;
-N_FILT = 20;
-PRE_EMP_COEF = 0.6;
+N_FFT = 1024;
+N_FILT = 40;
+PRE_EMP_COEF = 0.85;
 pre_emp_filter = [ -1*PRE_EMP_COEF, 1];
 
 % waves are procesed in chunks with length of fft
@@ -48,25 +48,21 @@ while chunk_idx(end) <= wav_len
     mod_chunk = filter(pre_emp_filter, 1, mod_chunk);
     mod_rms = rms(mod_chunk);
     mod_chunk = window.*mod_chunk;
-    lpc_mod = lpc(mod_chunk, N_FILT);
-    lpc_mod = [lpc_mod(end:-1:2), lpc_mod];
+    [lpc_mod, error] = lpc(mod_chunk, N_FILT);
     carr_chunk = carrier_wav(chunk_idx);
+    carr_rms = rms(carr_chunk);
     fft_mod = abs(fft(mod_chunk, N_FFT)); % calc fft of modulator
-
-    % multiply spectrum by spectrum filters - we get vector with
-    % information how much energy is within frequency band,
-    % we add 1 because frequencies  below FILT_DOWN and bigger than FILT_UP are zeros,
-    % so to not lose information about this band we set their coef to 1
-    filt_coef = fft_mod' * spectrum_filts';
     % update fir filters by filter coefficients
-    fir_filters = update_fir_bank(fir_bank, filt_coef);
-    % get one output filter from filter_bank
-    filter_out = sum(fir_filters);
     % do the convolution
-    carr_chunk_filtered = filter(lpc_mod, 1,carr_chunk');
-    carr_rms = rms(carr_chunk_filtered);
-    gain_factor = mod_rms/carr_rms;
+    carr_chunk_filtered = filter(1, lpc_mod, carr_chunk');
+%     plot(carr_chunk');
+%     hold on;
+%     plot(carr_chunk_filtered);
+%     hold off;
+    
     carr_chunk_filtered = carr_chunk_filtered.*window';
+    out_rms = rms(carr_chunk_filtered);
+    gain_factor = mod_rms/out_rms;
     % concate filtered chunk to output wave
     output_wav(chunk_idx) = output_wav(chunk_idx) + carr_chunk_filtered*gain_factor;
     chunk_idx = chunk_idx + chunk_step;
@@ -74,7 +70,7 @@ end
 
 toc
 tic
-y = chanvocoder(carrier_wav, modulator_wav, N_FFT, N_FILT, 1/2);
+%y = chanvocoder(carrier_wav, modulator_wav, N_FFT, N_FILT, 1/2);
 toc
 sound(output_wav', carr_fs);
 %audiowrite('outputs/output.wav',output_wav,carr_fs);

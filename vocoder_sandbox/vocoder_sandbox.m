@@ -1,5 +1,5 @@
 % load input files, carrier - guitar recording, modulator - voice recording
-carrier_path = 'inputs/carrier_3.wav';
+carrier_path = 'inputs/carrier_2.wav';
 modulator_path = 'inputs/modulator_2.wav';
 
 [carrier_wav, carr_fs] = audioread(carrier_path);
@@ -25,7 +25,7 @@ N_FILT = 100;
 FILT_LOW = 10;
 FILT_UP = 22000;
 FILT_ORD = 200; 
-PRE_EMP_COEF = 0.6;
+PRE_EMP_COEF = 0.85;
 pre_emp_filter = [ -1*PRE_EMP_COEF, 1];
 
 % get spectrum filters table -> more info inside function
@@ -52,7 +52,7 @@ chunk_step = chunk_len/2; % frames are overlapping 50%
 % ifft
 % both methods sound well (fir kinda better) and their performance is similar, but there is
 % some slight difference, check it :) 
-fir_filtering = true;
+fir_filtering = false;
 tic
 if fir_filtering == true
     % proccesing loop
@@ -102,7 +102,7 @@ else
         filt_coef = (fft_mod' * spectrum_filts');
         % update spectrum filters by filters coefficients = we get envelope
         % of modulator spectrum
-        curr_filters = filt_coef*spectrum_filts+1;
+        curr_filters = filt_coef*spectrum_filts;
         % we got envelope of only first half of modulator spectrum so we
         % must mirror it
         mirr_half = curr_filters(end/2:-1:2);

@@ -120,6 +120,7 @@ class Vocoder:
 class VocoderLPC(Vocoder):
     def __init__(self, settings, input_stream=None, output_stream=None):
         super(VocoderLPC, self).__init__(settings, input_stream, output_stream)
+        self.iir_filter_state = np.array([])
 
     def initialize(self):
         self.window = signal.windows.hann(2*self.settings.CHUNK)
@@ -145,7 +146,10 @@ class VocoderLPC(Vocoder):
         mod_signal = signal.lfilter([-self.settings.PRE_EMP_COEFF, 1], 1, mod_signal)
 
         lpc_coefs = self.calc_lpc(mod_signal)
-        output_signal = signal.lfilter([1], lpc_coefs, carr_signal)
+        if self.iir_filter_state.size == 0:
+            self.iir_filter_state = signal.lfilter_zi([1], lpc_coefs)
+        output_signal, zf = signal.lfilter([1], lpc_coefs, carr_signal, zi=self.iir_filter_state*carr_signal[0])
+        self.iir_filter_state = zf
         out_rms = sqrt(mean(square(output_signal)))
         gain_factor = carr_rms / out_rms if  carr_rms else mod_rms / out_rms
         output_signal_windowed = np.float32(np.multiply(output_signal, self.window) * gain_factor)
