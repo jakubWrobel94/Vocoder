@@ -80,7 +80,7 @@ class Controller:
         self._vocoder.process()
 
     def stopVocoder(self):
-        pass
+        self._vocoder.close_streams()
 
     def setFFT(self):
         print("setted FFT in Controller class")

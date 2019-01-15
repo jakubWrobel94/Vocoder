@@ -61,8 +61,8 @@ class VocoderGUI:
     def runVocoder(self):
         if not self.processing:
             self.controller.set_vocoder_mode(mode=MODE.file,
-                                             mod_path=self.carrFile,
-                                             carr_path=self.modFile)
+                                             mod_path=self.modFile,
+                                             carr_path=self.carrFile)
 
             self.t1 = threading.Thread(target=self.process)
             self.t1.start()
@@ -72,6 +72,7 @@ class VocoderGUI:
 
     def stopVocoder(self):
         self.processing = False
+        self.controller.stopVocoder()
 
     def chooseInput1(self):
         print("wybieram input1")
@@ -79,7 +80,11 @@ class VocoderGUI:
     def process(self):
         self.processing = True
         while self.processing:
-            self.controller.runVocoder()
+            try:
+                self.controller.runVocoder()
+            except Exception:
+                self.stopVocoder()
+
 
     def chooseCarrFilename(self):
         self.carrFile = filedialog.askopenfilename(initialdir="./wavs", title="Select Carr file")

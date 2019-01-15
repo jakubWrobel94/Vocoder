@@ -12,7 +12,6 @@ class Stream:
     def __init__(self):
         self.p = pyaudio.PyAudio()
 
-
 class LiveStream(Stream):
     """ Class which holds the Stream from interface device """
     def __init__(self, frames_per_buffer, input_device_index, chunk, 
@@ -39,6 +38,10 @@ class LiveStream(Stream):
 
         return carr_frame, mod_frame, carr_rms
 
+    def stop_streaming(self):
+        self.stream.stop_stream()
+        self.stream.close()
+
 
 class FileStream(Stream):
     """ Class which operates on file and stream it """
@@ -60,6 +63,10 @@ class FileStream(Stream):
 
         return carr_frame, mod_frame, None
 
+    def stop_streaming(self):
+        self.carr_wave.close()
+        self.mod_wave.close()
+
 
 class OutputStream(Stream):
     """ Class which holds the output stream - updating stream variable enables
@@ -73,6 +80,10 @@ class OutputStream(Stream):
                                   output=True,
                                   frames_per_buffer=frames_per_buffer,
                                   input_device_index=input_device_index)
+
+    def stop_streaming(self):
+        self.stream.stop_stream()
+        self.stream.close()
 
 
 class Settings:
@@ -116,6 +127,10 @@ class Vocoder:
 
         return carr_signal, mod_signal, carr_rms
 
+    def close_streams(self):
+        self.input_stream.stop_streaming()
+        self.output_stream.stop_streaming()
+
 
 class VocoderLPC(Vocoder):
     def __init__(self, settings, input_stream=None, output_stream=None):
@@ -140,7 +155,8 @@ class VocoderLPC(Vocoder):
             raise Exception("You have to provide Input and Output Stream")
 
         carr_signal, mod_signal, carr_rms = self.get_updated_buffer()
-
+        if carr_signal.size != self.settings.CHUNK*2 or mod_signal.size != self.settings.CHUNK*2:
+            raise Exception("EndOFFile")
         mod_rms = sqrt(mean(square(mod_signal)))
         mod_signal = np.multiply(mod_signal, self.window)
         mod_signal = signal.lfilter([-self.settings.PRE_EMP_COEFF, 1], 1, mod_signal)
