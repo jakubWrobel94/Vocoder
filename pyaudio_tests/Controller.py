@@ -4,14 +4,29 @@ from collections import namedtuple, defaultdict
 import pyaudio
 #  variable of type MODE can only be of type 'file' or 'live'
 MODE = namedtuple('MODE', 'file live')._make(range(2))
+calcStrategy = namedtuple('calcStrategy', 'LPC FFT')._make(range(2))
 
-CHUNK = 512
-N_FFT = 2 * CHUNK
-N_FILT = 128
-FILT_LOW = 100
-FILT_UP = 10000
-PRE_EMP_COEFF = 0.97
-N_TAPS = 80
+
+default_LPC_settings = {
+    'CHUNK': 512,
+    'PRE_EMP_COEFF': 0.97,
+    'N_TAPS': 80,
+}
+
+default_FFT_settings = {
+    'CHUNK': 512,
+    'PRE_EMP_COEFF': 0.97,
+    'N_FILT': 128,
+    'FILT_LOW': 100,
+    'FILT_UP': 10000,
+}
+
+# CHUNK = 512
+# N_FILT = 128
+# FILT_LOW = 100
+# FILT_UP = 10000
+# PRE_EMP_COEFF = 0.97
+# N_TAPS = 80
 
 class Controller:
     """
@@ -23,7 +38,7 @@ class Controller:
         When creating the Controller object it uses as default the LPC 
         algorithm.
         """
-        self.setLPC()
+        self.setLPC(**default_LPC_settings)
         p = pyaudio.PyAudio()
         self.devices = [p.get_device_info_by_index(idx)
                         for idx in range(p.get_device_count())]
@@ -43,17 +58,20 @@ class Controller:
         * for the File mode:
             -> 'carr_path': path to the wave file of the guitar
             -> 'mod_path': path to the wave filel of the modulator - vocal
+        * for both:
+            -> 'output_idx': index of the output device
         """
         if mode is MODE.live:
             assert (
                 'input_device_index' in kwargs
                 and 'carr_idx' in kwargs
-                and 'mod_idx' in kwargs)
+                and 'mod_idx' in kwargs
+                and 'output_idx' in kwargs)
             self._vocoder_mode = mode
             self._input_stream = LiveStream(
-                    frames_per_buffer=CHUNK,
+                    frames_per_buffer=self._settings.CHUNK,
                     input_device_index=kwargs['input_device_index'],
-                    chunk=CHUNK,
+                    chunk=self._settings.CHUNK,
                     carr_idx=kwargs['carr_idx'],
                     mod_idx=kwargs['mod_idx'])
 
@@ -61,17 +79,19 @@ class Controller:
         elif mode is MODE.file:
             assert (
                 'carr_path' in kwargs
-                and 'mod_path' in kwargs)
+                and 'mod_path' in kwargs
+                and 'output_idx' in kwargs)
             self._vocoder_mode = mode
             self._input_stream = FileStream(
                     mod_file_path=kwargs['mod_path'],
                     carr_file_path=kwargs['carr_path'],
-                    chunk=CHUNK)
+                    chunk=self._settings.CHUNK)
 
         self._output_stream = OutputStream(
                 channels=self._input_stream.CHANNELS,
                 rate=self._input_stream.SAMPLE_RATE,
-                frames_per_buffer=CHUNK)
+                frames_per_buffer=self._settings.CHUNK,
+                input_device_index=kwargs['output_idx'])
 
         self._vocoder.input_stream = self._input_stream
         self._vocoder.output_stream = self._output_stream
@@ -80,23 +100,13 @@ class Controller:
     def stopVocoder(self):
         self._vocoder.close_streams()
 
-    def setFFT(self):
-        if not hasattr(self, '_settingsFFT'):
-            self._settingsFFT = SettingsFFT(CHUNK = CHUNK,
-                                            PRE_EMP_COEFF = PRE_EMP_COEFF,
-                                            N_FILT=N_FILT,
-                                            FILT_LOW=FILT_LOW,
-                                            FILT_UP=FILT_UP)
+    def setFFT(self, **kwargs):
+        self._settings = SettingsFFT(**kwargs)
+        self._vocoder = VocoderFFT(settings=self._settings)
 
-        self._vocoder = VocoderFFT(settings=self._settingsFFT)
-
-    def setLPC(self):
-        if not hasattr(self, '_settingsLPC'):
-            self._settingsLPC = SettingsLPC(CHUNK = CHUNK,
-                                            N_TAPS = N_TAPS,
-                                            PRE_EMP_COEFF = PRE_EMP_COEFF)
-
-        self._vocoder = VocoderLPC(settings=self._settingsLPC)
+    def setLPC(self, **kwargs):
+        self._settings = SettingsLPC(**kwargs)
+        self._vocoder = VocoderLPC(settings=self._settings)
 
     def get_input_devices(self):
         """
