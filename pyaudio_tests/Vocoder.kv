@@ -74,12 +74,13 @@
 
         ToggleButton:
             size_hint: (1, .5)
-            text: "FFT/LPC"
+            text: "LPC"
+            on_release: vocoderView.change_calc_strategy(self)
 
         Button:
             size_hint: (1, .5)
             text: "Settings"
-
+            on_release: vocoderView.on_settings_click()
     Label:
         text: "place for FFT"
 
@@ -102,3 +103,105 @@
             Button:
                 text: "Load"
                 on_release: root.load(filechooser.path, filechooser.selection)
+
+<SettingsWindowLPC>
+    BoxLayout:
+        orientation: "vertical"
+        spacing: 10
+        BoxLayout:
+            Label:
+
+                text: "Chunk size"
+            TextInput:
+                size_hint: (.4, 1)
+                id: chunk_size_val
+                text: '512'
+
+        BoxLayout:
+            Label:
+                text: 'Pre. emp. coef.'
+
+            TextInput:
+                size_hint: (.4, 1)
+                id: pre_emp_val
+                text: '0.95'
+
+        BoxLayout:
+            Label:
+                text: 'Taps number'
+
+            TextInput:
+                size_hint: (.4, 1)
+                id: n_taps_val
+                text: '40'
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()
+
+            Button:
+                text: "Save"
+                on_release: root.save(CHUNK=chunk_size_val.text, PRE_EMP_COEFF=pre_emp_val.text, N_TAPS=n_taps_val.text)
+
+
+<SettingsWindowFFT>
+    BoxLayout:
+        orientation: "vertical"
+        spacing: 10
+        BoxLayout:
+            Label:
+
+                text: "Chunk size"
+            TextInput:
+                size_hint: (.4, 1)
+                id: chunk_size_val
+                text: '512'
+
+        BoxLayout:
+            Label:
+                text: 'Pre. emp. coef.'
+
+            TextInput:
+                size_hint: (.4, 1)
+                id: pre_emp_val
+                text: '0.95'
+
+        BoxLayout:
+            Label:
+                text: 'Filters number'
+
+            TextInput:
+                size_hint: (.4, 1)
+                id: n_filts_val
+                text: '40'
+
+        BoxLayout:
+            Label:
+                text: 'Filter low'
+
+            TextInput:
+                size_hint: (.4, 1)
+                id: filt_low_val
+                text: '50'
+
+        BoxLayout:
+            Label:
+                text: 'Filter up'
+
+            TextInput:
+                size_hint: (.4, 1)
+                id: filt_up_val
+                text: '10000'
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()
+
+            Button:
+                text: "Save"
+                on_release: root.save(CHUNK=chunk_size_val.text, PRE_EMP_COEFF=pre_emp_val.text, N_FILT=n_filts_val.text, FILT_LOW=filt_low_val, FILT_UP=filt_up_val)

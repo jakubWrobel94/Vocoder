@@ -3,6 +3,7 @@ import Controller
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.dropdown import DropDown
 from kivy.uix.popup import Popup
@@ -11,7 +12,9 @@ from kivy.base import runTouchApp
 from Controller import MODE
 from functools import partial
 from kivy.properties import ObjectProperty
-import os
+from collections import namedtuple
+
+calcStrategy = namedtuple('calcStrategy', 'LPC FFT')._make(range(2))
 
 class VocoderView(GridLayout):
 
@@ -21,6 +24,7 @@ class VocoderView(GridLayout):
     carrier_source_button = ObjectProperty(None)
     modulator_source_button = ObjectProperty(None)
     mode = MODE.file
+    calc_strategy = calcStrategy.LPC
 
     input_devices = None
     output_devices = None
@@ -115,9 +119,9 @@ class VocoderView(GridLayout):
 
         if self.mode == MODE.file:
             content = LoadDialog(load=self.save_carrier_file_path, cancel=self.dismiss_popup)
-            self._load_file_popup = Popup(title="Load file", content=content,
-                                size_hint=(0.9, 0.9))
-            self._load_file_popup.open()
+            self._popup = Popup(title="Load file", content=content,
+                                size_hint=(0.7, 0.7))
+            self._popup.open()
         elif self.mode == MODE.live:
             kwargs['dropdown'].open(args[0])
 
@@ -128,11 +132,26 @@ class VocoderView(GridLayout):
 
         if self.mode == MODE.file:
             content = LoadDialog(load=self.save_modulator_file_path, cancel=self.dismiss_popup)
-            self._load_file_popup = Popup(title="Load file", content=content,
-                                size_hint=(0.9, 0.9))
-            self._load_file_popup.open()
+            self._popup = Popup(title="Load file", content=content,
+                                size_hint=(0.7, 0.7))
+            self._popup.open()
         elif self.mode == MODE.live:
             kwargs['dropdown'].open(args[0])
+
+    def on_settings_click(self, *args, **kwargs):
+        if self.calc_strategy == calcStrategy.LPC:
+            content = SettingsWindowLPC(save=self.save_settings, cancel=self.dismiss_popup)
+            self._popup = Popup(title="Settings window LPC", content=content,
+                                          size_hint=(None, None), size=(300, 200))
+            self._popup.open()
+        else:
+            content = SettingsWindowFFT(save=self.save_settings, cancel=self.dismiss_popup)
+            self._popup = Popup(title="Settings window FFT", content=content,
+                                          size_hint=(None, None), size=(300, 300))
+            self._popup.open()
+
+    def save_settings(self, **kwargs):
+        self.dismiss_popup()
 
     def save_carrier_file_path(self, path, filename):
 
@@ -152,7 +171,7 @@ class VocoderView(GridLayout):
 
         '''Called when file dialog needs to be closed'''
 
-        self._load_file_popup.dismiss()
+        self._popup.dismiss()
 
     def change_mode(self, *args):
 
@@ -168,6 +187,14 @@ class VocoderView(GridLayout):
             self.carrier_source_button.text = 'choose input'
             self.modulator_source_button.text = 'choose input'
 
+    def change_calc_strategy(self, button):
+        if self.calc_strategy == calcStrategy.LPC:
+            self.calc_strategy = calcStrategy.FFT
+            button.text = "FFT"
+        else:
+            self.calc_strategy = calcStrategy.LPC
+            button.text = "LPC"
+
     def on_play(self):
         pass
 
@@ -178,6 +205,15 @@ class LoadDialog(FloatLayout):
     load = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
+class SettingsWindow(BoxLayout):
+    save = ObjectProperty(None)
+    cancel = ObjectProperty(None)
+
+class SettingsWindowLPC(SettingsWindow):
+    pass
+
+class SettingsWindowFFT(SettingsWindow):
+    pass
 
 class VocoderApp(App):
 
