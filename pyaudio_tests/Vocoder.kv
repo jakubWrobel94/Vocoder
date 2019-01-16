@@ -41,14 +41,14 @@
                 text: "Carrier source"
             ComboBoxButton
                 id: carrier_source_button
-                text: "choose source"
+                text: "choose file"
 
         BoxLayout:
             ComboBoxLabels:
                 text: "Modulator source"
             ComboBoxButton
                 id: modulator_source_button
-                text: "choose source"
+                text: "choose file"
 
     Label:
         text: "place for FFT"
@@ -61,19 +61,44 @@
             Button:
                 size_hint: (.7, .5)
                 text: "Play"
+                on_release: vocoderView.on_play()
             Button:
                 size_hint: (.3, .5)
                 text: "Stop"
+                on_release: vocoderView.on_stop()
 
-        Button:
+        ToggleButton:
             size_hint: (1, .5)
-            text: "Live/File"
-        Button:
+            text: "File"
+            on_release: vocoderView.change_mode(self)
+
+        ToggleButton:
             size_hint: (1, .5)
             text: "FFT/LPC"
+
         Button:
             size_hint: (1, .5)
             text: "Settings"
 
     Label:
         text: "place for FFT"
+
+
+<LoadDialog>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        FileChooserListView:
+            id: filechooser
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()
+
+            Button:
+                text: "Load"
+                on_release: root.load(filechooser.path, filechooser.selection)
