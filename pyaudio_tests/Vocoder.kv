@@ -1,0 +1,79 @@
+<ComboBoxButton@Button>:
+    font_size: 11
+    width: 200
+    size_hint: (.6, 1)
+
+<ComboBoxLabels@Label>:
+    font_size: 11
+    size_hint: (.4, 1)
+
+<VocoderView>:
+    id: vocoderView
+    rows: 2
+    columns: 2
+    padding: 10
+    spacing: 10
+    input_devices_button: input_devices_button
+    output_devices_button: output_devices_button
+    carrier_source_button: carrier_source_button
+    modulator_source_button: modulator_source_button
+
+    BoxLayout:
+        spacing: 30
+        padding: 20
+        orientation: "vertical"
+        BoxLayout:
+            ComboBoxLabels:
+                text: "Input device"
+            ComboBoxButton
+                id: input_devices_button
+                text: "choose device"
+
+        BoxLayout:
+            ComboBoxLabels:
+                text: "Output device"
+            ComboBoxButton
+                id: output_devices_button
+                text: "choose device"
+
+        BoxLayout:
+            ComboBoxLabels:
+                text: "Carrier source"
+            ComboBoxButton
+                id: carrier_source_button
+                text: "choose source"
+
+        BoxLayout:
+            ComboBoxLabels:
+                text: "Modulator source"
+            ComboBoxButton
+                id: modulator_source_button
+                text: "choose source"
+
+    Label:
+        text: "place for FFT"
+
+    BoxLayout:
+        orientation: "vertical"
+        spacing: 30
+
+        BoxLayout:
+            Button:
+                size_hint: (.7, .5)
+                text: "Play"
+            Button:
+                size_hint: (.3, .5)
+                text: "Stop"
+
+        Button:
+            size_hint: (1, .5)
+            text: "Live/File"
+        Button:
+            size_hint: (1, .5)
+            text: "FFT/LPC"
+        Button:
+            size_hint: (1, .5)
+            text: "Settings"
+
+    Label:
+        text: "place for FFT"
