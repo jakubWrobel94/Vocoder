@@ -13,6 +13,7 @@ from Controller import MODE, calcStrategy
 from functools import partial
 from kivy.properties import ObjectProperty
 from collections import namedtuple
+import threading
 
 class VocoderView(GridLayout):
 
@@ -30,7 +31,9 @@ class VocoderView(GridLayout):
     output_device_index = None
     carrier_file_path = None
     modulator_file_path = None
-
+    carrier_input_index = None
+    modulator_input_index = None
+    is_playing = False
     def __init__(self, **kwargs):
         super(VocoderView, self).__init__(**kwargs)
         self.controller = Controller.Controller()
@@ -95,10 +98,12 @@ class VocoderView(GridLayout):
         self.dropdown_mod = DropDown()
         for i in range(0, max):
             text_inp = 'Input %d' % i
-            btn_carr = Button(text=text_inp, size_hint_y=None, height=30, font_size=11)
-            btn_mod = Button(text=text_inp, size_hint_y=None, height=30, font_size=11)
+            btn_carr = Button(text=text_inp, size_hint_y=None, height=30, font_size=11, id=str(i))
+            btn_mod = Button(text=text_inp, size_hint_y=None, height=30, font_size=11, id=str(i))
             btn_carr.bind(on_release=lambda btn: self.dropdown_carr.select(btn.text))
+            btn_carr.bind(on_release=lambda btn: self.set_carr_input_index(btn.id))
             btn_mod.bind(on_release=lambda btn: self.dropdown_mod.select(btn.text))
+            btn_mod.bind(on_release=lambda btn: self.set_mod_input_index(btn.id))
             self.dropdown_carr.add_widget(btn_carr)
             self.dropdown_mod.add_widget(btn_mod)
 
@@ -108,6 +113,12 @@ class VocoderView(GridLayout):
         self.modulator_source_button.bind(on_release=mod_but_callback)
         self.dropdown_carr.bind(on_select=lambda instance, x: setattr(self.carrier_source_button, 'text', x))
         self.dropdown_mod.bind(on_select=lambda instance, y: setattr(self.modulator_source_button, 'text', y))
+
+    def set_carr_input_index(self, index):
+        self.carrier_input_index = int(index)
+
+    def set_mod_input_index(self, index):
+        self.modulator_input_index = int(index)
 
     def on_carrier_source_click(self, *args, **kwargs):
 
@@ -130,6 +141,7 @@ class VocoderView(GridLayout):
 
         if self.mode == MODE.file:
             content = LoadDialog(load=self.save_modulator_file_path, cancel=self.dismiss_popup)
+            content.path = "/wavs"
             self._popup = Popup(title="Load file", content=content,
                                 size_hint=(0.7, 0.7))
             self._popup.open()
@@ -149,6 +161,10 @@ class VocoderView(GridLayout):
             self._popup.open()
 
     def save_settings(self, **kwargs):
+        if self.calc_strategy == calcStrategy.LPC:
+            self.controller.setLPC(**kwargs)
+        else:
+            self.controller.setFFT(**kwargs)
         self.dismiss_popup()
 
     def save_carrier_file_path(self, path, filename):
@@ -194,10 +210,30 @@ class VocoderView(GridLayout):
             button.text = "LPC"
 
     def on_play(self):
-        pass
+        if self.mode == MODE.live:
+            self.controller.set_vocoder_mode(self.mode,
+                                             input_device_index=self.input_device_index,
+                                             carr_idx=self.carrier_input_index,
+                                             mod_idx=self.modulator_input_index,
+                                             output_idx=self.output_device_index)
+        else:
+            self.controller.set_vocoder_mode(self.mode,
+                                             carr_path=self.carrier_file_path,
+                                             mod_path=self.modulator_file_path,
+                                             output_idx=self.output_device_index)
+        self.is_playing = True
+        self.process_thread = threading.Thread(target=self.process)
+        self.process_thread.start()
 
     def on_stop(self):
-        pass
+        self.is_playing = False
+        self.controller.stopVocoder()
+    def process(self):
+        while self.is_playing == True:
+            try:
+                self.controller.runVocoder()
+            except Exception:
+                self.on_stop()
 
 class LoadDialog(FloatLayout):
     load = ObjectProperty(None)

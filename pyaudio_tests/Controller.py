@@ -88,7 +88,7 @@ class Controller:
                     chunk=self._settings.CHUNK)
 
         self._output_stream = OutputStream(
-                channels=self._input_stream.CHANNELS,
+                channels=1,
                 rate=self._input_stream.SAMPLE_RATE,
                 frames_per_buffer=self._settings.CHUNK,
                 input_device_index=kwargs['output_idx'])

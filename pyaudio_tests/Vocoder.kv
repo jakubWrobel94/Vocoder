@@ -144,7 +144,7 @@
 
             Button:
                 text: "Save"
-                on_release: root.save(CHUNK=chunk_size_val.text, PRE_EMP_COEFF=pre_emp_val.text, N_TAPS=n_taps_val.text)
+                on_release: root.save(CHUNK=int(chunk_size_val.text), PRE_EMP_COEFF=float(pre_emp_val.text), N_TAPS=int(n_taps_val.text))
 
 
 <SettingsWindowFFT>
@@ -204,4 +204,4 @@
 
             Button:
                 text: "Save"
-                on_release: root.save(CHUNK=chunk_size_val.text, PRE_EMP_COEFF=pre_emp_val.text, N_FILT=n_filts_val.text, FILT_LOW=filt_low_val, FILT_UP=filt_up_val)
+                on_release: root.save(CHUNK=int(chunk_size_val.text), PRE_EMP_COEFF=float(pre_emp_val.text), N_FILT=int(n_filts_val.text), FILT_LOW=int(filt_low_val.text), FILT_UP=int(filt_up_val.text))
