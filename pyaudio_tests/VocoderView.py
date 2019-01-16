@@ -9,12 +9,10 @@ from kivy.uix.dropdown import DropDown
 from kivy.uix.popup import Popup
 from kivy.uix.filechooser import FileChooserListView
 from kivy.base import runTouchApp
-from Controller import MODE
+from Controller import MODE, calcStrategy
 from functools import partial
 from kivy.properties import ObjectProperty
 from collections import namedtuple
-
-calcStrategy = namedtuple('calcStrategy', 'LPC FFT')._make(range(2))
 
 class VocoderView(GridLayout):
 
