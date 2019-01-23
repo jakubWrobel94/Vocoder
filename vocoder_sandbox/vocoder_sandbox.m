@@ -1,4 +1,4 @@
-% load input files, carrier - guitar recording, modulator - voice recording
+%load input files, carrier - guitar recording, modulator - voice recording
 carrier_path = 'inputs/carrier_2.wav';
 modulator_path = 'inputs/modulator_2.wav';
 
@@ -21,12 +21,13 @@ modulator_wav = modulator_wav(1:wav_len);
 % FILT_UP - f of last filter
 % FILT_ORD - FIR filter order
 N_FFT = 2048;
-N_FILT = 100;
-FILT_LOW = 10;
+N_FILT = 40;
+FILT_LOW = 60;
 FILT_UP = 22000;
 FILT_ORD = 200; 
-PRE_EMP_COEF = 0.85;
+PRE_EMP_COEF = 0.95;
 pre_emp_filter = [ -1*PRE_EMP_COEF, 1];
+[pre_emp_freqz, ~] = freqz(pre_emp_filter, 1, N_FFT/2);
 
 % get spectrum filters table -> more info inside function
 [spectrum_filts, filt_freqs] = get_spectrum_filters(FILT_LOW, FILT_UP, N_FILT, N_FFT, mod_fs);
@@ -53,6 +54,7 @@ chunk_step = chunk_len/2; % frames are overlapping 50%
 % both methods sound well (fir kinda better) and their performance is similar, but there is
 % some slight difference, check it :) 
 fir_filtering = false;
+f = linspace(0, carr_fs, N_FFT)
 tic
 if fir_filtering == true
     % proccesing loop
@@ -90,9 +92,13 @@ else
         % get modulator and window frames
         mod_chunk = modulator_wav(chunk_idx);
         mod_rms = rms(mod_chunk);
+        fft_pre_emp_befor = fft(mod_chunk);
+        
         mod_chunk = filter(pre_emp_filter, 1, mod_chunk);
+        fft_pre_emp_after = fft(mod_chunk);
         mod_chunk = window.*mod_chunk;
         
+        plot_pre_emp(f, pre_emp_freqz, fft_pre_emp_befor, fft_pre_emp_after);
         
         carr_chunk = carrier_wav(chunk_idx);
         % calc modulator and carrier FFT
@@ -103,16 +109,30 @@ else
         % update spectrum filters by filters coefficients = we get envelope
         % of modulator spectrum
         curr_filters = filt_coef*spectrum_filts;
+        
+        plot_filter_bank(f, spectrum_filts, fft_mod, curr_filters);
+        
         % we got envelope of only first half of modulator spectrum so we
         % must mirror it
         mirr_half = curr_filters(end/2:-1:2);
         curr_filters = [curr_filters(1:end/2+1), mirr_half];
         % modify carrier spectrum by envelope of modulator spectrum
         fft_carr_filt = fft_carr.*curr_filters';
+        
+        plot_carr_filtered(f, fft_carr, curr_filters, fft_carr_filt)
+        
+        
         % do ifft to go back to time domain
         carr_chunk_filtered =(ifft(fft_carr_filt, N_FFT))'; 
+       
+        
+        plot_time_chunk(carr_chunk_filtered, carr_chunk_filtered.*window');
+        
+        
         carr_filtered_rms = rms(carr_chunk_filtered);
         carr_chunk_filtered = carr_chunk_filtered.*window'; 
+        
+        
         gain_factor = mod_rms/carr_filtered_rms;
         if isempty(output_wav)
             output_wav = carr_chunk_filtered;
@@ -130,3 +150,4 @@ tic
 toc
 sound(output_wav', carr_fs);
 %audiowrite('outputs/output.wav',output_wav,carr_fs);
+
